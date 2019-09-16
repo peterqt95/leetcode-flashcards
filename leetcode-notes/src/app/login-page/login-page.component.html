@@ -12,15 +12,22 @@
       <mat-label>Password</mat-label>
       <input
         matInput
+        (keyup.enter)="login()"
         placeholder="Password" [type]="hidePwd ? 'password' : 'text'"
         formControlName="password">
-      <button mat-icon-button matSuffix (click)="hidePwd = !hidePwd" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePwd">
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="hidePwd = !hidePwd"
+        [attr.aria-label]="'Hide password'"
+        [attr.aria-pressed]="hidePwd">
         <mat-icon>{{hidePwd ? 'visibility_off' : 'visibility'}}</mat-icon>
       </button>
     </mat-form-field>
   </form>
   <div class="actions">
-    <button mat-flat-button color="primary" (click)="login()">Login</button>
+    <button mat-flat-button color="primary" (click)="login()" type="submit">Login</button>
     <span class="spacer"></span>
     <mat-progress-spinner
       *ngIf="!loadStatus.isLoaded && !loadStatus.isError"

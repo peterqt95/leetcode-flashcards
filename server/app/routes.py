@@ -1,9 +1,13 @@
 import json
-from app import api
+from app import api, jwt
 from .models import User, UserSchema, LeetCodeNote, LeetCodeNoteSchema
 from flask import request, session
 from flask_restful import Resource, Api
 from http import HTTPStatus
+from flask_jwt_extended import (
+    jwt_required, create_access_token, get_jwt_identity, create_refresh_token,
+    jwt_refresh_token_required
+)
 
 class Error():
     def __init__(self):
@@ -16,6 +20,24 @@ class Error():
             "status": self.status
         }
 
+class Token(Error):
+    def __init__(self):
+        super().__init__()
+        self.access_token = ''
+        self.refresh_token = ''
+        self.name = ''
+        self.user_id = -1
+    
+    def to_json(self):
+        return {
+            "error": self.error,
+            "status": self.status,
+            "accessToken": self.access_token,
+            "refreshToken": self.refresh_token,
+            "name": self.name,
+            "userId": self.user_id,
+        }
+
 class DefaultResource(Resource):
     def get(self):
         return {'task': 'Hello world'}
@@ -24,10 +46,12 @@ class UsersResource(Resource):
     def __init__(self):
         self.users_schema = UserSchema(many=True)
 
+    @jwt_required
     def get(self):
         users = User.query.all()
         return self.users_schema.dump(users)
     
+    @jwt_required
     def post(self):
         return_status = HTTPStatus.CREATED
         data = request.get_json(force = True)
@@ -44,6 +68,7 @@ class UserResource(Resource):
     def __init__(self):
         self.user_schema = UserSchema()
 
+    @jwt_required
     def get(self, id):
         return_status = HTTPStatus.OK
         try:
@@ -53,7 +78,8 @@ class UserResource(Resource):
             return_status = HTTPStatus.NOT_FOUND
         
         return self.user_schema.dump(user)
-    
+
+    @jwt_required
     def put(self, id):
         return_status = HTTPStatus.CREATED
         data = request.get_json(force = True)
@@ -73,25 +99,40 @@ class LeetCodeNotesResource(Resource):
     def __init__(self):
         self.leetcode_notes_schema = LeetCodeNoteResource(many=True)
 
+    @jwt_required
     def get(self):
         leetcode_notes = LeetCodeNote.query.all()
         return self.leetcode_notes_schema(leetcode_notes)
+    
+    def post(self):
+        return_status = HTTPStatus.CREATED
+        data = request.get_json(force = True)
+        try:
+            leetcode_note = LeetCodeNote(data['problem'], data['solution'], data['message'], data['userId'])
+            leetcode_note.post()
+        except Exception as e:
+            print(e)
+            return_status = HTTPStatus.FORBIDDEN
+
+        return data, return_status
 
 class LeetCodeNoteResource(Resource):
     def __init__(self):
         self.leetcode_note_schema = LeetCodeNoteResource()
-
+    
+    @jwt_required
     def get(self, id):
         leetcode_note = LeetCodeNote.query.get(id)
         return self.leetcode_note_schema(leetcode_note)
 
 class LoginRequired(Resource):
+    @jwt_required
     def get(self):
         return_status = HTTPStatus.OK
         status = Error()
         try:
-            username = request.args.get('name')
-            if username and username in session:
+            current_user = get_jwt_identity()
+            if current_user:
                 status.status = True
             else:
                 status.error = "Not logged in"
@@ -103,7 +144,7 @@ class LoginRequired(Resource):
 
     def post(self):
         return_status = HTTPStatus.OK
-        status = Error()
+        status = Token()
         data = request.get_json(force = True)
         try:
             # Get the info
@@ -111,6 +152,10 @@ class LoginRequired(Resource):
             if user and data['password'] == user.password:
                 session[user.name] = True
                 status.status = True
+                status.access_token = create_access_token(identity=user.name)
+                status.refresh_token = create_refresh_token(identity=user.name)
+                status.name = user.name
+                status.user_id = user.myid
             else:
                 status.error = "Invalid username or password"
         except Exception as e:
@@ -119,9 +164,24 @@ class LoginRequired(Resource):
         
         return status.to_json(), return_status
 
+class RefreshTokenResource(Resource):
+    @jwt_refresh_token_required
+    def get(self):
+        return_status = HTTPStatus.OK
+        status = Token()
+        current_user = get_jwt_identity()
+        if current_user:
+            status.status = True
+            status.access_token = create_access_token(identity=current_user)
+        else:
+            status.error = "Invalid refresh token"
+
+        return status.to_json(), return_status
+
 api.add_resource(DefaultResource, '/')
 api.add_resource(UsersResource, '/users')
 api.add_resource(UserResource, '/users/<int:id>')
 api.add_resource(LeetCodeNotesResource, '/leetcode_notes')
 api.add_resource(LeetCodeNoteResource, '/leetcode_notes/<int:id>')
 api.add_resource(LoginRequired, '/login')
+api.add_resource(RefreshTokenResource, '/refresh')

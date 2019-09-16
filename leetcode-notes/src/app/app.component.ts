@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { LoginService } from './services/login.service';
+import { User } from './login-page/Classes/User';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +10,11 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'leetcode-notes';
+  currentUser: User;
+
+  constructor(
+    private router: Router,
+    private loginService: LoginService) {
+      this.loginService.currentUser.subscribe(x => this.currentUser = x);
+  }
 }

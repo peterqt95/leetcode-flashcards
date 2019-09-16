@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { LoginService } from '@services/login.service';
 import { PartialObserver } from 'rxjs';
-import { LoginStatus } from './Classes/LoginStatus';
+import { User } from './Classes/User';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { LoadStatus } from '@app/shared/Classes/LoadStatus';
+import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-login-page',
@@ -18,23 +19,38 @@ export class LoginPageComponent implements OnInit {
   // Hide for password
   hidePwd = true;
 
+  // Return url
+  returnUrl: string;
+
   // Load Status
   loadStatus: LoadStatus = new LoadStatus();
 
   constructor(
+    private router: Router,
+    private route: ActivatedRoute,
     private loginService: LoginService,
     private _formBuilder: FormBuilder
-  ) { }
+  ) {
+    this.route.queryParams.subscribe(queryParams => {
+      this.returnUrl = queryParams['returnUrl'];
+    });
+  }
 
   ngOnInit() {
     // Route away if logged in
-    if (this.loginService.isLoggedIn) {
-
+    if (this.loginService.currentUserValue) {
+      this.router.navigate(['/home']);
     } else {
       this.loginFg = this._formBuilder.group({
         userName: ['', Validators.required],
         password: ['', Validators.required]
       });
+
+      // Reset login status
+      this.loginService.logout();
+
+      // Get url from route parameters or default to home
+      this.returnUrl = this.returnUrl || '/';
 
       this.loadStatus.isLoaded = true;
     }
@@ -49,12 +65,13 @@ export class LoginPageComponent implements OnInit {
 
   private loginSub(): PartialObserver<any> {
     return {
-      next: (data: LoginStatus) => {
+      next: (data: User) => {
         if (!data.status) {
           this.loadStatus.isError = true;
           this.loadStatus.errorMsg = data.error;
         } else {
           // Route to new component
+          this.router.navigate([this.returnUrl]);
         }
       },
       error: (err) => {

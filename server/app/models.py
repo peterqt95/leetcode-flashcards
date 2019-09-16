@@ -33,6 +33,15 @@ class LeetCodeNote(db.Model):
     message = db.Column(db.String(255), nullable=False)
     date_created = db.Column(db.Integer, nullable=False, default=int(time()))
 
+    def __init__(self, problem, solution, message):
+        self.problem = problem
+        self.solution = solution
+        self.message = message
+
+    def post(self):
+        db.session.add(self)
+        db.session.commit()
+
 class LeetCodeNoteSchema(ma.ModelSchema):
     class Meta:
         model = LeetCodeNote

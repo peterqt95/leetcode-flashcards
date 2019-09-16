@@ -6,18 +6,22 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppRoutingModule } from './app-routing.module';
 import { MaterialModule } from './material-module';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 // Components
 import { AppComponent } from './app.component';
 import { LoginPageComponent } from './login-page/login-page.component';
-// import { LoginService } from './services/login.service';
+import { HomeComponent } from './home/home.component';
+import { JwtInterceptor } from './services/interceptors/jwt.interceptor';
+import { ErrorInterceptor } from './services/interceptors/error.interceptor';
+
 
 @NgModule({
   declarations: [
     AppComponent,
-    LoginPageComponent
+    LoginPageComponent,
+    HomeComponent
   ],
   imports: [
     BrowserModule,
@@ -28,7 +32,10 @@ import { LoginPageComponent } from './login-page/login-page.component';
     ReactiveFormsModule,
     AppRoutingModule
   ],
-  providers: [],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
