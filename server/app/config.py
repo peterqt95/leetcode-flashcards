@@ -18,5 +18,5 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = "super secret key"
     JWT_SECRET_KEY = SECRET_KEY
-    # JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(days=1)
-    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=1)
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(days=1)
+    # JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=1)

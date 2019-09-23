@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { LoginService } from '@services/login.service';
 import { PartialObserver } from 'rxjs';
-import { User } from './Classes/User';
+import { User } from '../models/User';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { LoadStatus } from '@app/shared/Classes/LoadStatus';
 import { Router, ActivatedRoute } from '@angular/router';

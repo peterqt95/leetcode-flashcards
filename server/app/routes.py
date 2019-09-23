@@ -1,5 +1,5 @@
 import json
-from app import api, jwt
+from app import api, jwt, db
 from .models import User, UserSchema, LeetCodeNote, LeetCodeNoteSchema
 from flask import request, session
 from flask_restful import Resource, Api
@@ -97,33 +97,61 @@ class UserResource(Resource):
 
 class LeetCodeNotesResource(Resource):
     def __init__(self):
-        self.leetcode_notes_schema = LeetCodeNoteResource(many=True)
+        self.leetcode_notes_schema = LeetCodeNoteSchema(many=True)
 
     @jwt_required
     def get(self):
-        leetcode_notes = LeetCodeNote.query.all()
-        return self.leetcode_notes_schema(leetcode_notes)
+        params = self.leetcode_notes_schema.deserialize_args(request.args)
+        leetcode_notes = db.session.query(LeetCodeNote)
+        print(params)
+        for param, value in params.items():
+            if isinstance(value, list):
+                leetcode_notes = leetcode_notes.filter(getattr(LeetCodeNote, param).in_(value))
+            else:
+                leetcode_notes = leetcode_notes.filter(getattr(LeetCodeNote, param) == value)
+        leetcode_notes = leetcode_notes.all()
+        return self.leetcode_notes_schema.dump(leetcode_notes, rename=self.leetcode_notes_schema.rename_map)
     
+    @jwt_required
     def post(self):
+        return_status = HTTPStatus.CREATED
+        status = Error()
+        data = request.get_json(force = True)
+        try:
+            leetcode_note = LeetCodeNote(data['title'], data['problem'], data['solution'], data['message'], data['userId'])
+            leetcode_note.post()
+            status.status = True
+        except Exception as e:
+            status.error = str(e)
+            return_status = HTTPStatus.FORBIDDEN
+
+        return status.to_json(), return_status
+
+class LeetCodeNoteResource(Resource):
+    def __init__(self):
+        self.leetcode_note_schema = LeetCodeNoteSchema()
+    
+    @jwt_required
+    def get(self, id):
+        leetcode_note = LeetCodeNote.query.get(id)
+        return self.leetcode_note_schema.dump(leetcode_note, rename=self.leetcode_note_schema.rename_map)
+    
+    @jwt_required
+    def put(self, id):
         return_status = HTTPStatus.CREATED
         data = request.get_json(force = True)
         try:
-            leetcode_note = LeetCodeNote(data['problem'], data['solution'], data['message'], data['userId'])
-            leetcode_note.post()
+            # Get the information
+            leetcode_note = LeetCodeNote.query.filter_by(myid=id).first()
+
+            # Update information from request
+            leetcode_note.put(data)
         except Exception as e:
             print(e)
             return_status = HTTPStatus.FORBIDDEN
 
         return data, return_status
 
-class LeetCodeNoteResource(Resource):
-    def __init__(self):
-        self.leetcode_note_schema = LeetCodeNoteResource()
-    
-    @jwt_required
-    def get(self, id):
-        leetcode_note = LeetCodeNote.query.get(id)
-        return self.leetcode_note_schema(leetcode_note)
 
 class LoginRequired(Resource):
     @jwt_required
