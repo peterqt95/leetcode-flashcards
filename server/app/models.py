@@ -17,8 +17,9 @@ class User(db.Model):
         db.session.commit()
     
     def put(self, data):
-        self.name = data['username']
-        self.password = data['password']
+        for key in data:
+            if getattr(self, key):
+                setattr(self, key, data[key])
         db.session.commit()
 
 class UserSchema(ma.ModelSchema):
@@ -70,9 +71,9 @@ class LeetCodeNote(db.Model):
         db.session.commit()
     
     def put(self, data):
-        self.problem = data['problem']
-        self.solution = data['solution']
-        self.message = data['message']
+        for key in data:
+            if getattr(self, key):
+                setattr(self, key, data[key])
         db.session.commit()
 
 class LeetCodeNoteSchema(ma.ModelSchema):

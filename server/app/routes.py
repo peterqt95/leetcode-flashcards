@@ -103,7 +103,6 @@ class LeetCodeNotesResource(Resource):
     def get(self):
         params = self.leetcode_notes_schema.deserialize_args(request.args)
         leetcode_notes = db.session.query(LeetCodeNote)
-        print(params)
         for param, value in params.items():
             if isinstance(value, list):
                 leetcode_notes = leetcode_notes.filter(getattr(LeetCodeNote, param).in_(value))
@@ -139,6 +138,7 @@ class LeetCodeNoteResource(Resource):
     @jwt_required
     def put(self, id):
         return_status = HTTPStatus.CREATED
+        status = Error()
         data = request.get_json(force = True)
         try:
             # Get the information
@@ -146,12 +146,12 @@ class LeetCodeNoteResource(Resource):
 
             # Update information from request
             leetcode_note.put(data)
+            status.status = True
         except Exception as e:
-            print(e)
+            status.error = str(e)
             return_status = HTTPStatus.FORBIDDEN
 
-        return data, return_status
-
+        return status.to_json(), return_status
 
 class LoginRequired(Resource):
     @jwt_required
