@@ -6,6 +6,7 @@
     align-items: center;
 }
 
-.problem-container {
-    width: 800px;
+.problem-info {
+    display: flex;
+    flex-direction: column;
 }

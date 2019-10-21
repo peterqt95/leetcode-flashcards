@@ -20,7 +20,7 @@ export class HomeComponent implements OnInit{
   loadStatus: LoadStatus = new LoadStatus();
 
   // Displayed Columns
-  displayedColumns: string[] = ['myId', 'title'];
+  displayedColumns: string[] = ['myId', 'title', 'edit'];
   dataSource: MatTableDataSource<LeetcodeNote>;
 
   @ViewChild(MatPaginator) paginator: MatPaginator;

@@ -5,9 +5,8 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 // Modules
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppRoutingModule } from './app-routing.module';
-import { MaterialModule } from './material-module';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { LeetcodeProblemModule } from './leetcode-problem/leetcode-problem.module';
 
 // Components
 import { AppComponent } from './app.component';
@@ -15,7 +14,7 @@ import { LoginPageComponent } from './login-page/login-page.component';
 import { HomeComponent } from './home/home.component';
 import { JwtInterceptor } from './services/interceptors/jwt.interceptor';
 import { ErrorInterceptor } from './services/interceptors/error.interceptor';
-
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -25,12 +24,11 @@ import { ErrorInterceptor } from './services/interceptors/error.interceptor';
   ],
   imports: [
     BrowserModule,
-    MaterialModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    FormsModule,
-    ReactiveFormsModule,
-    AppRoutingModule
+    LeetcodeProblemModule,
+    SharedModule,
+    AppRoutingModule,
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },

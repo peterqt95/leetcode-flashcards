@@ -18,17 +18,7 @@ export class LeetcodeNoteService {
   ) { }
 
   public get(parameters: any) {
-    let httpParams = new HttpParams();
-    Object.keys(parameters).forEach(parameter => {
-      const value = parameters[parameter];
-      if (Array.isArray(value)) {
-        value.forEach(item => {
-          httpParams = httpParams.append(parameter, item);
-        });
-      } else {
-        httpParams = httpParams.append(parameter, value);
-      }
-    });
+    const httpParams = this.buildParams(parameters);
 
     return this.http.get<LeetcodeNote[]>(this.flaskUrl + '/leetcode_notes', {params: httpParams}).pipe(
       map((results: LeetcodeNote[]) => {
@@ -41,5 +31,35 @@ export class LeetcodeNoteService {
         return returnResults;
       })
     );
+  }
+
+  public getNote(noteId: number, parameters: any) {
+    const httpParams = this.buildParams(parameters);
+
+    return this.http.get<LeetcodeNote>(this.flaskUrl + '/leetcode_notes/' + noteId, {params: httpParams}).pipe(
+      map((result: LeetcodeNote) => {
+        let returnResult = null;
+        if (result) {
+          returnResult = new LeetcodeNote(result);
+        }
+        return returnResult;
+      })
+    );
+  }
+
+  private buildParams(parameters: any): HttpParams {
+    let httpParams = new HttpParams();
+    Object.keys(parameters).forEach(parameter => {
+      const value = parameters[parameter];
+      if (Array.isArray(value)) {
+        value.forEach(item => {
+          httpParams = httpParams.append(parameter, item);
+        });
+      } else {
+        httpParams = httpParams.append(parameter, value);
+      }
+    });
+
+    return httpParams;
   }
 }
